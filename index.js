@@ -8,21 +8,48 @@ const fs= require('fs')
 app.use(bodyParser.json())
 app.use(cors());
 
-const users = [
-    {id : 1, name : 'Vinay'},
-    {id : 2, name : 'Sai'},
-    {id : 3, name : 'Khaja'}
-]
+const mongoose = require('mongoose');
+
+mongoose.connect('mongodb://0.0.0.0:27017/mydb');
+
+// user - id, name
+
+const UserSchema =new mongoose.Schema({
+    userId : {type: Number, required: true},
+    userName: {type: String, required: true}
+})
+
+const User = mongoose.model('User', UserSchema);
+
 
 app.post('/addUser', (request, response) => {
-    users.push(request.body);
+   const userObj = new User(request.body); //{userId : '123', userName : 'Khaja'}
+
+   userObj.save().then(() =>{
+    response.send(JSON.stringify(request.body));
+   })
+   .catch(err => response.send(JSON.stringify(err)));
+
    
-    response.send(JSON.stringify(users))
+   
 })
 
 app.get('/users', (request, response) => {
 
-response.send(JSON.stringify(users))
+    User.find().then(
+        users => response.send(JSON.stringify(users))
+    )
+        .catch(err => response.send(JSON.stringify(err)))
+
+})
+
+app.get('/getUsersById', (request, response) => {
+
+    User.find({userId  :123}).then(
+        users => response.send(JSON.stringify(users))
+    )
+        .catch(err => response.send(JSON.stringify(err)))
+
 })
 
 app.post('/login', (req, res) => {
