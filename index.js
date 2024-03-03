@@ -23,12 +23,21 @@ const User = mongoose.model('User', UserSchema);
 
 
 app.post('/addUser', (request, response) => {
-   const userObj = new User(request.body); //{userId : '123', userName : 'Khaja'}
-
-   userObj.save().then(() =>{
-    response.send(JSON.stringify(request.body));
-   })
-   .catch(err => response.send(JSON.stringify(err)));
+    const userObj = new User(request.body); //{userId : '123', userName : 'Khaja'}
+    if (request.body && request.body.userId !== null && request.body.userName !== null) {
+        userObj.save().then(() => {
+            response.send(JSON.stringify({Status : 'User added successfully'}));
+        })
+        .catch(err => response.status(400).send(JSON.stringify({Status : 'User not added', err: err})));
+    } else {
+        response.status(400).send(JSON.stringify({Status : 'User not added successfully'}));
+    }
+    // 2XX - 200 - success
+    //4XX - 400 - bad request
+    // 404 - not found
+    // 403 - forbidden
+    // 500 - 504 gatewaytimeoutnode
+// nginx - client 123.456.789.0 server /admin /
 
    
    
@@ -52,6 +61,7 @@ app.get('/getUsersById', (request, response) => {
 
 })
 
+
 app.post('/login', (req, res) => {
     console.log(req.body);
     //DB call
@@ -62,6 +72,37 @@ app.post('/login', (req, res) => {
     }
    
 })
+
+
+app.put('/updateUser/:userId', (request, response) => {
+    const id = request.params.userId;
+    if(id){
+        User.find({userId : id}).then(
+            user =>{
+                console.log(user);
+                if(user.length > 0){
+                    User.updateMany({userId : id}, {userId : id, userName : request.body.userName}).then(
+                        user => {
+                            if(user){
+                                response.send('User updated successfully') 
+                            }
+                        }
+                    )
+                    .catch(error => {
+                        response.send(JSON.stringify(error)) 
+                    })
+                } else {
+                    response.status(404).send('userId not found') 
+                }
+            }
+        )
+        .catch(error => {
+            response.send(JSON.stringify(error)) 
+        })
+    }
+
+})
+
 app.listen(3001, () => {
     console.log('server is running on port number 3000')
 })
@@ -73,6 +114,10 @@ app.listen(3001, () => {
 // npm install express cors
 
 // run server - node index.js
+
+//db.users.find()
+
+
 
 
 
